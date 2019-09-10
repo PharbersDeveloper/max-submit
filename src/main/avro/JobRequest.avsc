@@ -1,0 +1,63 @@
+{
+  "type": "record",
+  "name": "JobRequest",
+  "namespace": "com.pharbers.kafka.schema",
+  "fields": [
+    {
+      "name": "Name",
+      "type": "string"
+    },
+    {
+      "name": "JobType",
+      "type": "string"
+    },
+     {
+      "name": "Class",
+      "type": "string"
+    },
+    {
+      "name": "Master",
+      "type": "string"
+    },
+    {
+      "name": "DeployMode",
+      "type": "string"
+    },
+    {
+      "name": "ExecutorMemory",
+      "type": "string"
+    },
+    {
+      "name": "ExecutorCores",
+      "type": "string"
+    },
+     {
+      "name": "NumExecutors",
+      "type": "string"
+    },
+    {
+      "name": "Queue",
+      "type": "string"
+    },
+    {
+      "name": "Target",
+      "type": "string"
+    },
+    {
+      "name": "Parameters",
+      "type": "string"
+    },
+    {
+      "name": "Files",
+      "type": "string"
+    },
+    {
+      "name": "Conf",
+      "type": "string"
+    },
+    {
+      "name": "Jars",
+      "type": "string"
+    }
+  ]
+}
