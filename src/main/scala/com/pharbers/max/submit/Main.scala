@@ -22,10 +22,10 @@ import org.yaml.snakeyaml.Yaml
 import scala.collection.JavaConverters._
 
 
-object Main extends PhLogable{
-    def main(args: Array[String]): Unit ={
-        if(args.length != 3) throw new Exception("args length is not equal to 3")
-        useJobId("user", "trace", args(1)){
+object Main extends PhLogable {
+    def main(args: Array[String]): Unit = {
+        if (args.length < 2) throw new Exception("args length is not equal to 3")
+        useJobId("user", "trace", args(1)) {
             _ => run(args)
         }
     }
@@ -33,11 +33,20 @@ object Main extends PhLogable{
     def run(args: Array[String]): Unit = {
         // 第一波对接成功后整理Kafka的库封装
         val pkp = new PharbersKafkaProducer[String, ListeningJobTask]
+        val shellValues = try {
+            new CommandLineValues(args: _*)
+        } catch {
+            case e: Exception =>
+                logger.error("参数错误")
+                logger.error(e)
+                pkp.produce(Config.topic, "", new ListeningJobTask("", "Error", "参数错误" + e.getMessage, "-1"))
+                throw e
+        }
+        val config = shellValues.getConfig
+        val jobModelPath = shellValues.getPath
+        val jobId = shellValues.getJobId
         try {
-            val jobModelPath = args(0)
-            val jobId = args(1)
             val readStream = HDFSRead(jobModelPath).toInputStream()
-            logger.info(args(2))
             val jobArgs = Map(
                 "topic" -> Config.topic,
                 "jobId" -> jobId,
@@ -45,8 +54,7 @@ object Main extends PhLogable{
                 "cleanGycx" -> s"hdfs:///workData/Clean/gycx-$jobId",
                 "panel" -> s"hdfs:///workData/Panel/$jobId",
                 "max" -> s"hdfs:///workData/Max/$jobId"
-            ) ++
-                    JsonInput.mapper.readValue(args(2), classOf[java.util.Map[String, String]]).asScala
+            ) ++ config
             val jobs = YamlInput().readObjects[Job](LocalRead(buildYaml(readStream, jobArgs, "temp")).toInputStream())
 
             implicit val sd: PhSparkDriver = PhSparkDriver("job-context")
@@ -58,7 +66,7 @@ object Main extends PhLogable{
                 "sparkDriver" -> PhSparkDriverArgs(sd)
             ))
 
-            val phJobs = jobs.map(x =>{
+            val phJobs = jobs.map(x => {
                 x.jobId = jobId
                 getMethodMirror(x.getFactory)(x, ctx).asInstanceOf[PhFactoryTrait[PhJobTrait]].inst()
             })
@@ -69,7 +77,7 @@ object Main extends PhLogable{
         } catch {
             case e: Exception =>
                 logger.error(e)
-                pkp.produce(Config.topic, args(1), new ListeningJobTask(args(1), "Error", e.getMessage, "-1"))
+                pkp.produce(Config.topic, jobId, new ListeningJobTask(jobId, "Error", e.getMessage, "-1"))
         } finally {
             pkp.producer.close(Duration.ofSeconds(10))
         }
@@ -78,7 +86,9 @@ object Main extends PhLogable{
 
 
     def buildYaml(templateInputStream: InputStream, argsMap: Map[String, String], name: String): String = {
+
         import scala.collection.JavaConversions._
+
         val data: java.util.Map[String, java.util.Map[String, String]] = new util.HashMap()
         data.put("args", argsMap.map(x => (x._1, "&" + x._1 + " " + x._2)))
         val headList = new Yaml().dumpAsMap(data).split("\n")

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="OFF" name="MyApp" packages="">
+<Configuration status="OFF" name="MyApp" packages="com.pharbers.util.log.plugin">
     <properties>
         <property name="LOG_HOME">/bplogs</property>
         <property name="FILE_NAME">app</property>
