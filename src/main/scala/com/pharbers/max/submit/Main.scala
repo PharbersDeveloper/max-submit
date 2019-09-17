@@ -77,6 +77,7 @@ object Main extends PhLogable {
         } catch {
             case e: Exception =>
                 logger.error(e)
+                logger.error(e.getStackTrace.map(x => x.toString).mkString(","))
                 pkp.produce(Config.topic, jobId, new ListeningJobTask(jobId, "Error", e.getMessage, "-1"))
         } finally {
             pkp.producer.close(Duration.ofSeconds(10))

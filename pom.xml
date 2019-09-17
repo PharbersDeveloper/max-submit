@@ -129,7 +129,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.1.1</version>
         <configuration>
-          <finalName>max-context-Json</finalName>
+          <finalName>max-context-shell</finalName>
           <appendAssemblyId>false</appendAssemblyId>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
